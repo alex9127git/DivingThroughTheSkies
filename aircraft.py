@@ -1,6 +1,8 @@
+"""Класс спрайта самолета."""
 import pygame
 from bullet import Bullet
-from const import WIDTH, HEIGHT, MAX_ACCELERATION, COOLDOWN
+from const import WIDTH, HEIGHT, MAX_ACCELERATION, COOLDOWN, BULLET_SPEED
+from explosion import Explosion
 from rendering import load_image
 from math import asin, degrees
 
@@ -18,6 +20,8 @@ class Aircraft(pygame.sprite.Sprite):
         self.ay = 0
         self.angle = 0
         self.cooldown = COOLDOWN
+        self.hp = 3
+        self.bullet_dmg = 1
 
     def accelerate(self, dx, dy):
         self.ax += dx
@@ -31,7 +35,7 @@ class Aircraft(pygame.sprite.Sprite):
         if self.ay <= -MAX_ACCELERATION:
             self.ay = -MAX_ACCELERATION
 
-    def update(self, secs, cursor):
+    def update(self, secs):
         self.cooldown -= secs
         if self.cooldown < 0:
             self.cooldown = 0
@@ -51,6 +55,8 @@ class Aircraft(pygame.sprite.Sprite):
             self.x = WIDTH + 50
         elif self.x > WIDTH + 50:
             self.x = -50
+
+    def rotate_to_cursor(self, cursor):
         dx = cursor.rect.centerx - self.rect.centerx
         dy = cursor.rect.centery - self.rect.centery
         d = max(((dx ** 2) + (dy ** 2)) ** 0.5, 0.1)
@@ -62,7 +68,17 @@ class Aircraft(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = self.x, self.y
 
-    def shoot(self, bullets, sprites):
+    def shoot(self, groups):
         if self.cooldown == 0:
-            Bullet(self, bullets, sprites)
+            Bullet(self, self.bullet_dmg, BULLET_SPEED, groups["player_bullets"], groups["sprites"])
             self.cooldown = COOLDOWN
+
+    def check_bullet_collisions(self, groups):
+        """Проверяет столкновение с пулями."""
+        bullet = pygame.sprite.spritecollideany(self, groups["enemy_bullets"])
+        if bullet is not None and isinstance(bullet, Bullet):
+            self.hp -= bullet.dmg
+            Explosion(self.x, self.y, groups["sprites"], groups["explosions"])
+            bullet.kill()
+            if self.hp <= 0:
+                self.kill()

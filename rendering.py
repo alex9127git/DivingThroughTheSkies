@@ -1,3 +1,4 @@
+"""Вспомогательный класс, связанный с функцией отрисовки."""
 import os
 import sys
 import pygame
@@ -5,6 +6,7 @@ from const import WIDTH, HEIGHT
 
 
 def initialize():
+    """Инициализирует модуль pygame и возвращает сгенерированный экран."""
     pygame.init()
     size = WIDTH, HEIGHT
     screen = pygame.display.set_mode(size)
@@ -14,6 +16,7 @@ def initialize():
 
 
 def load_image(name, colorkey=None):
+    """Загружает изображение."""
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден", file=sys.stderr)

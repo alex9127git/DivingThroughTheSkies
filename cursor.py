@@ -1,3 +1,4 @@
+"""Класс спрайта курсора."""
 import pygame
 from rendering import load_image
 
@@ -10,4 +11,5 @@ class Cursor(pygame.sprite.Sprite):
         self.rect.center = 0, 0
 
     def update_pos(self, x, y):
+        """Обновляет позицию курсора и заменяет ее позицией мыши."""
         self.rect.center = x, y
