@@ -1,13 +1,27 @@
 """Класс спрайта самолета."""
 import pygame
 from bullet import Bullet
-from const import WIDTH, HEIGHT, MAX_ACCELERATION, COOLDOWN, BULLET_SPEED
+from const import WIDTH, HEIGHT, MAX_ACCELERATION, COOLDOWN, BULLET_SPEED, AIRCRAFT_HP, calculate_aircraft_experience
+from experience import Experience
 from explosion import Explosion
 from rendering import load_image
 from math import asin, degrees
 
 
 class Aircraft(pygame.sprite.Sprite):
+    class UpgradesRecord:
+        def __init__(self):
+            self.upgrade_branch = -1
+            self.upgrades = [0, 0, 0]
+
+        def __getitem__(self, item):
+            return self.upgrades[item]
+
+        def __iadd__(self, other):
+            if isinstance(other, int) and 0 <= other <= 2:
+                self.upgrades[other] += 1
+            return self
+
     def __init__(self, *groups):
         super().__init__(*groups)
         self.orig = pygame.transform.scale(load_image("aircraft.png", colorkey=-1), (60, 60))
@@ -20,8 +34,13 @@ class Aircraft(pygame.sprite.Sprite):
         self.ay = 0
         self.angle = 0
         self.cooldown = COOLDOWN
-        self.hp = 3
+        self.max_hp = AIRCRAFT_HP
+        self.hp = self.max_hp
+        self.level = 0
+        self.experience = 0
+        self.experience_to_next_level = calculate_aircraft_experience(self.level)
         self.bullet_dmg = 1
+        self.upgrades = Aircraft.UpgradesRecord()
 
     def accelerate(self, dx, dy):
         self.ax += dx
@@ -55,6 +74,8 @@ class Aircraft(pygame.sprite.Sprite):
             self.x = WIDTH + 50
         elif self.x > WIDTH + 50:
             self.x = -50
+        if self.hp <= 0:
+            self.kill()
 
     def rotate_to_cursor(self, cursor):
         dx = cursor.rect.centerx - self.rect.centerx
@@ -75,10 +96,27 @@ class Aircraft(pygame.sprite.Sprite):
 
     def check_bullet_collisions(self, groups):
         """Проверяет столкновение с пулями."""
-        bullet = pygame.sprite.spritecollideany(self, groups["enemy_bullets"])
+        bullet = pygame.sprite.spritecollideany(self, groups["enemy_bullets"],
+                                                collided=pygame.sprite.collide_rect_ratio(.5))
         if bullet is not None and isinstance(bullet, Bullet):
             self.hp -= bullet.dmg
             Explosion(self.x, self.y, groups["sprites"], groups["explosions"])
             bullet.kill()
-            if self.hp <= 0:
-                self.kill()
+
+    def check_experience(self, groups):
+        xp = pygame.sprite.spritecollideany(self, groups["experience_coins"])
+        if xp is not None and isinstance(xp, Experience):
+            self.experience += xp.xp
+            xp.kill()
+        if self.experience >= self.experience_to_next_level and self.level <= 9:
+            self.experience -= self.experience_to_next_level
+            self.level += 1
+            self.experience_to_next_level = calculate_aircraft_experience(self.level)
+            return self.level
+        return -1
+
+    def has_branch(self):
+        return self.upgrades.upgrade_branch != -1
+
+    def assign_branch(self, branch):
+        self.upgrades.upgrade_branch = branch

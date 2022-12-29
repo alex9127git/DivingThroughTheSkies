@@ -23,3 +23,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = self.x, self.y
         if not (0 <= self.x <= WIDTH and 0 <= self.y <= HEIGHT):
             self.kill()
+
+    def kill(self):
+        super().kill()
+        del self

@@ -1,6 +1,6 @@
 """Класс, позволяющий отрисовывать различный текст."""
 import pygame
-from const import FONT
+from const import FONT_FILE
 
 
 class Text(pygame.sprite.Sprite):
@@ -13,7 +13,7 @@ class Text(pygame.sprite.Sprite):
         self.pivot = pivot
 
     def update(self, secs):
-        self.image = FONT.render(self.text, True, self.color)
+        self.image = pygame.font.Font(FONT_FILE, 24).render(self.text, True, self.color)
         self.rect = self.image.get_rect()
         coords = self.x, self.y
         if self.pivot == "topleft":

@@ -36,3 +36,7 @@ class Explosion(pygame.sprite.Sprite):
             self.rect.center = self.x, self.y
         else:
             self.kill()
+
+    def kill(self):
+        super().kill()
+        del self

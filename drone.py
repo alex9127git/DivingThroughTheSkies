@@ -26,7 +26,8 @@ class Drone(Enemy):
         self.rect = self.image.get_rect()
         self.rect.center = self.x, self.y
         self.hp = int(self.difficulty)
-        self.dmg = int(self.difficulty)
+        self.dmg = 1
+        self.experience_dropped = randint(int(1 * self.difficulty), int(3 * self.difficulty))
 
     def update(self, secs):
         self.x += self.vx * secs

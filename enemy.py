@@ -1,6 +1,8 @@
 """Общий класс, использующийся для спрайтов врагов."""
+from random import randrange
 import pygame
 from bullet import Bullet
+from experience import Experience
 from explosion import Explosion
 from rendering import load_image
 
@@ -18,18 +20,21 @@ class Enemy(pygame.sprite.Sprite):
         self.difficulty = difficulty
         self.hp = 1
         self.dmg = 1
+        self.experience_dropped = 0
 
     def update(self, secs):
         pass
 
     def check_bullet_collisions(self, groups):
         """Проверяет столкновение с пулями."""
-        bullet = pygame.sprite.spritecollideany(self, groups["player_bullets"])
+        bullet = pygame.sprite.spritecollideany(self, groups["player_bullets"],
+                                                collided=pygame.sprite.collide_rect_ratio(.75))
         if bullet is not None and isinstance(bullet, Bullet):
             self.hp -= bullet.dmg
             bullet.kill()
             if self.hp <= 0:
                 Explosion(self.x, self.y, groups["sprites"], groups["explosions"])
+                self.generate_experience(groups)
                 self.kill()
                 return True
         return False
@@ -41,6 +46,19 @@ class Enemy(pygame.sprite.Sprite):
             if aircraft.hp > 0:
                 aircraft.hp -= self.dmg
                 Explosion(aircraft.x, aircraft.y, groups["sprites"], groups["explosions"])
-                if aircraft.hp == 0:
-                    aircraft.kill()
             self.kill()
+
+    def generate_experience(self, groups):
+        gold_xp = self.experience_dropped // 25
+        silver_xp = (self.experience_dropped % 25) // 5
+        bronze_xp = self.experience_dropped % 5
+        for _ in range(gold_xp):
+            Experience(self.x, self.y, 25, groups["sprites"], groups["experience_coins"])
+        for _ in range(silver_xp):
+            Experience(self.x, self.y, 5, groups["sprites"], groups["experience_coins"])
+        for _ in range(bronze_xp):
+            Experience(self.x, self.y, 1, groups["sprites"], groups["experience_coins"])
+
+    def kill(self):
+        super().kill()
+        del self

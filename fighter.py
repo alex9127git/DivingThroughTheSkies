@@ -36,10 +36,11 @@ class Fighter(Enemy):
         self.rect = self.image.get_rect()
         self.rect.center = self.x, self.y
         self.hp = int(3 * round(self.difficulty, 1))
-        self.dmg = int(round(self.difficulty, 1))
-        self.bullet_dmg = int(round(self.difficulty, 1))
+        self.dmg = 1
+        self.bullet_dmg = 1
         self.stop_timer = 1 / round(self.difficulty, 1)
         self.timer = 0
+        self.experience_dropped = randint(int(2 * self.difficulty), int(7 * self.difficulty))
 
     def update(self, secs):
         if self.timer:

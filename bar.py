@@ -3,11 +3,11 @@ import pygame
 
 
 class Bar(pygame.sprite.Sprite):
-    def __init__(self, x, y, max_value, color, *groups):
+    def __init__(self, x, y, w, h, max_value, color, *groups):
         super().__init__(*groups)
         self.max_value = max_value
         self.value = 0
-        self.image = pygame.Surface((100, 20))
+        self.image = pygame.Surface((w, h))
         self.rect = self.image.get_rect()
         self.color = color
         self.x = x
@@ -19,6 +19,10 @@ class Bar(pygame.sprite.Sprite):
         pygame.draw.rect(self.image, self.color,
                          (0, 0, self.image.get_width() / self.max_value * self.value, self.image.get_height()), 0)
         pygame.draw.rect(self.image, "black", self.image.get_rect(), 1)
+
+    def update_max_value(self, value):
+        """Обновляет максимальное значение полоски."""
+        self.max_value = value
 
     def update_value(self, value):
         """Обновляет значение полоски."""
