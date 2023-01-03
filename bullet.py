@@ -2,14 +2,14 @@
 import pygame
 from rendering import load_image
 from math import cos, sin, pi
-from const import BULLET_SPEED, WIDTH, HEIGHT
+from const import WIDTH, HEIGHT
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, aircraft, dmg, velocity, *groups):
+    def __init__(self, start_x, start_y, angle, dmg, velocity, *groups):
         super().__init__(*groups)
-        self.x, self.y = aircraft.x, aircraft.y
-        self.angle = aircraft.angle
+        self.x, self.y = start_x, start_y
+        self.angle = angle
         self.orig = pygame.transform.rotate(load_image("bullet.png", colorkey="white"), self.angle)
         self.image = self.orig
         self.rect = pygame.Rect(self.x - 2, self.y - 2, 5, 5)

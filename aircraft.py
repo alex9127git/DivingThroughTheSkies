@@ -1,11 +1,12 @@
 """Класс спрайта самолета."""
 import pygame
 from bullet import Bullet
-from const import WIDTH, HEIGHT, MAX_ACCELERATION, COOLDOWN, BULLET_SPEED, AIRCRAFT_HP, calculate_aircraft_experience
+from const import WIDTH, HEIGHT, MAX_ACCELERATION, BULLET_SPEED, AIRCRAFT_HP, calculate_aircraft_experience, \
+    DOUBLE_CANNON_BRANCH, MINIGUN_CANNON_BRANCH, HEAVY_CANNON_BRANCH
 from experience import Experience
 from explosion import Explosion
 from rendering import load_image
-from math import asin, degrees
+from math import asin, degrees, cos, sin
 
 
 class Aircraft(pygame.sprite.Sprite):
@@ -22,6 +23,46 @@ class Aircraft(pygame.sprite.Sprite):
                 self.upgrades[other] += 1
             return self
 
+        def calculate_base_dmg(self):
+            if self.upgrade_branch == DOUBLE_CANNON_BRANCH or self.upgrade_branch == MINIGUN_CANNON_BRANCH:
+                dmg = 1
+                dmg += sum((1, 1, 3, 3, 5)[:self[1]])
+            elif self.upgrade_branch == HEAVY_CANNON_BRANCH:
+                dmg = 3
+                dmg += sum((3, 3, 5, 5)[:self[1]])
+                dmg += sum((6, 6, 10, 10)[:self[2]])
+                dmg *= 1.5 if self[1] == 5 else 1
+                dmg *= 2 if self[2] == 5 else 1
+            else:
+                dmg = 1
+            return dmg
+
+        def calculate_cooldown(self):
+            if self.upgrade_branch == DOUBLE_CANNON_BRANCH:
+                cd = 1
+                cd *= 0.9 if self[2] >= 1 else 1
+                cd *= 0.9 if self[2] >= 2 else 1
+                cd *= 0.8 if self[2] >= 3 else 1
+                cd *= 0.8 if self[2] >= 4 else 1
+                cd *= 0.6 if self[2] >= 5 else 1
+            elif self.upgrade_branch == MINIGUN_CANNON_BRANCH:
+                cd = 0.33
+                cd *= 0.8 if self[2] >= 1 else 1
+                cd *= 0.8 if self[2] >= 2 else 1
+                cd *= 0.7 if self[2] >= 3 else 1
+                cd *= 0.7 if self[2] >= 4 else 1
+                cd *= 0.5 if self[2] >= 5 else 1
+            elif self.upgrade_branch == HEAVY_CANNON_BRANCH:
+                cd = 1.5
+                cd *= 1.2 if self[2] >= 1 else 1
+                cd *= 1.2 if self[2] >= 2 else 1
+                cd *= 1.2 if self[2] >= 3 else 1
+                cd *= 1.2 if self[2] >= 4 else 1
+                cd *= 1.5 if self[2] >= 5 else 1
+            else:
+                cd = 1
+            return cd
+
     def __init__(self, *groups):
         super().__init__(*groups)
         self.orig = pygame.transform.scale(load_image("aircraft.png", colorkey=-1), (60, 60))
@@ -33,13 +74,12 @@ class Aircraft(pygame.sprite.Sprite):
         self.ax = 0
         self.ay = 0
         self.angle = 0
-        self.cooldown = COOLDOWN
+        self.cooldown = 1
         self.max_hp = AIRCRAFT_HP
         self.hp = self.max_hp
         self.level = 0
         self.experience = 0
         self.experience_to_next_level = calculate_aircraft_experience(self.level)
-        self.bullet_dmg = 1
         self.upgrades = Aircraft.UpgradesRecord()
 
     def accelerate(self, dx, dy):
@@ -91,8 +131,44 @@ class Aircraft(pygame.sprite.Sprite):
 
     def shoot(self, groups):
         if self.cooldown == 0:
-            Bullet(self, self.bullet_dmg, BULLET_SPEED, groups["player_bullets"], groups["sprites"])
-            self.cooldown = COOLDOWN
+            if self.upgrades.upgrade_branch == DOUBLE_CANNON_BRANCH:
+                Bullet(self.x + cos(self.angle + 90) * 15, self.y + sin(self.angle + 90) * 15,
+                       self.angle, self.upgrades.calculate_base_dmg() * (1.5 if self.upgrades[0] >= 3 else 1),
+                       BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+                Bullet(self.x + cos(self.angle - 90) * 15, self.y + sin(self.angle - 90) * 15,
+                       self.angle, self.upgrades.calculate_base_dmg() * (1.5 if self.upgrades[0] >= 3 else 1),
+                       BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+                if self.upgrades[0] >= 1:
+                    Bullet(self.x, self.y, self.angle,
+                           self.upgrades.calculate_base_dmg() * (2 if self.upgrades[0] >= 2 else 1),
+                           BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+            elif self.upgrades.upgrade_branch == MINIGUN_CANNON_BRANCH:
+                if self.upgrades[0] >= 1:
+                    Bullet(self.x + cos(self.angle + 90) * 15, self.y + sin(self.angle + 90) * 15,
+                           self.angle, self.upgrades.calculate_base_dmg(),
+                           BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+                    Bullet(self.x + cos(self.angle - 90) * 15, self.y + sin(self.angle - 90) * 15,
+                           self.angle, self.upgrades.calculate_base_dmg(),
+                           BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+                if self.upgrades[0] != 1:
+                    Bullet(self.x, self.y, self.angle,
+                           self.upgrades.calculate_base_dmg() * (2 if self.upgrades[0] >= 3 else 1),
+                           BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+            elif self.upgrades.upgrade_branch == HEAVY_CANNON_BRANCH:
+                if self.upgrades[0] >= 1:
+                    Bullet(self.x + cos(self.angle + 90) * 15, self.y + sin(self.angle + 90) * 15,
+                           self.angle, self.upgrades.calculate_base_dmg() * (2 if self.upgrades[0] >= 2 else 1),
+                           BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+                    Bullet(self.x + cos(self.angle - 90) * 15, self.y + sin(self.angle - 90) * 15,
+                           self.angle, self.upgrades.calculate_base_dmg() * (2 if self.upgrades[0] >= 2 else 1),
+                           BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+                Bullet(self.x, self.y, self.angle,
+                       self.upgrades.calculate_base_dmg() * (3 if self.upgrades[0] >= 3 else 1),
+                       BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+            else:
+                Bullet(self.x, self.y, self.angle, self.upgrades.calculate_base_dmg(),
+                       BULLET_SPEED, groups["player_bullets"], groups["sprites"])
+            self.cooldown = self.upgrades.calculate_cooldown()
 
     def check_bullet_collisions(self, groups):
         """Проверяет столкновение с пулями."""

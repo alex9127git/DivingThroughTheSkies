@@ -76,5 +76,6 @@ class Fighter(Enemy):
             self.image = pygame.transform.rotate(self.orig, self.angle)
             self.rect = self.image.get_rect()
             self.rect.center = self.x, self.y
-            Bullet(self, self.bullet_dmg, BULLET_SPEED / 2, groups["enemy_bullets"], groups["sprites"])
+            Bullet(self.x, self.y, self.angle, self.bullet_dmg, BULLET_SPEED / 2, groups["enemy_bullets"],
+                   groups["sprites"])
             self.timer = self.stop_timer

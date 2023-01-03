@@ -1,5 +1,4 @@
 """Общий класс, использующийся для спрайтов врагов."""
-from random import randrange
 import pygame
 from bullet import Bullet
 from experience import Experience
