@@ -32,10 +32,12 @@ class Fighter(Enemy):
         if self.vx < 0:
             angle = 180 - angle
         self.angle = angle
+        self.orig = pygame.transform.scale(self.orig, (50, 50))
         self.image = pygame.transform.rotate(self.orig, self.angle)
         self.rect = self.image.get_rect()
         self.rect.center = self.x, self.y
-        self.hp = int(3 * round(self.difficulty, 1))
+        self.hp = int(3 * round(self.difficulty ** (1 + (self.difficulty - 1) / 4), 1))
+        self.max_hp = self.hp
         self.dmg = 1
         self.bullet_dmg = 1
         self.stop_timer = 1 / round(self.difficulty, 1)

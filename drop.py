@@ -1,16 +1,18 @@
-"""Класс спрайта монет опыта."""
+"""Класс спрайта выпадаемых предметов."""
 import pygame
-from drop import Drop
-import rendering
+from random import randint
 
 
-class Experience(Drop):
-    def __init__(self, x, y, xp_value, *groups):
-        super().__init__(x, y, *groups)
-        self.image = pygame.transform.scale(rendering.load_image(f"{xp_value}xp.png", colorkey=-1), (20, 20))
+class Drop(pygame.sprite.Sprite):
+    def __init__(self, x, y, *groups):
+        super().__init__(*groups)
+        self.image = pygame.Surface((1, 1))
         self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.ax = randint(-50, 50)
+        self.ay = randint(-50, 50)
         self.rect.center = self.x, self.y
-        self.xp = xp_value
 
     def update(self, secs):
         self.x += self.ax * secs

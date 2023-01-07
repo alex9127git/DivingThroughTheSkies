@@ -5,8 +5,11 @@ from const import WIDTH, HEIGHT, MAX_ACCELERATION, BULLET_SPEED, AIRCRAFT_HP, ca
     DOUBLE_CANNON_BRANCH, MINIGUN_CANNON_BRANCH, HEAVY_CANNON_BRANCH
 from experience import Experience
 from explosion import Explosion
+from health_refill import HealthRefill
 from rendering import load_image
 from math import asin, degrees, cos, sin
+
+from scrap import Scrap
 
 
 class Aircraft(pygame.sprite.Sprite):
@@ -24,7 +27,10 @@ class Aircraft(pygame.sprite.Sprite):
             return self
 
         def calculate_base_dmg(self):
-            if self.upgrade_branch == DOUBLE_CANNON_BRANCH or self.upgrade_branch == MINIGUN_CANNON_BRANCH:
+            if self.upgrade_branch == DOUBLE_CANNON_BRANCH:
+                dmg = 1
+                dmg += sum((2, 2, 4, 4, 7)[:self[1]])
+            elif self.upgrade_branch == MINIGUN_CANNON_BRANCH:
                 dmg = 1
                 dmg += sum((1, 1, 3, 3, 5)[:self[1]])
             elif self.upgrade_branch == HEAVY_CANNON_BRANCH:
@@ -81,6 +87,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.experience = 0
         self.experience_to_next_level = calculate_aircraft_experience(self.level)
         self.upgrades = Aircraft.UpgradesRecord()
+        self.scrap_got = 0
 
     def accelerate(self, dx, dy):
         self.ax += dx
@@ -179,11 +186,17 @@ class Aircraft(pygame.sprite.Sprite):
             Explosion(self.x, self.y, groups["sprites"], groups["explosions"])
             bullet.kill()
 
-    def check_experience(self, groups):
-        xp = pygame.sprite.spritecollideany(self, groups["experience_coins"])
-        if xp is not None and isinstance(xp, Experience):
-            self.experience += xp.xp
-            xp.kill()
+    def check_drops(self, groups):
+        drop = pygame.sprite.spritecollideany(self, groups["drops"],
+                                              collided=pygame.sprite.collide_rect_ratio(.75))
+        if drop is not None:
+            if isinstance(drop, Experience):
+                self.experience += drop.xp
+            elif isinstance(drop, Scrap):
+                self.scrap_got += 1
+            elif isinstance(drop, HealthRefill):
+                self.hp += 1 if self.hp < self.max_hp else 0
+            drop.kill()
         if self.experience >= self.experience_to_next_level and self.level <= 9:
             self.experience -= self.experience_to_next_level
             self.level += 1

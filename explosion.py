@@ -1,6 +1,6 @@
 """Класс анимированного спрайта взрыва."""
 import pygame
-from rendering import load_image
+import rendering
 
 
 SECONDS_PER_FRAME = 0.125
@@ -10,7 +10,7 @@ class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y, *groups):
         super().__init__(*groups)
         self.frames = []
-        self.sheet = load_image("explosion 4x1.png", colorkey=-1)
+        self.sheet = rendering.load_image("explosion 4x1.png", colorkey=-1)
         self.cut_sheet(self.sheet, 4, 1)
         self.frame = 0
         self.image = self.frames[self.frame]

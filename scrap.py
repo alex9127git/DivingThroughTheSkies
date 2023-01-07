@@ -1,16 +1,16 @@
-"""Класс спрайта монет опыта."""
+"""Класс спрайта металлолома."""
 import pygame
 from drop import Drop
 import rendering
+from random import randint
 
 
-class Experience(Drop):
-    def __init__(self, x, y, xp_value, *groups):
+class Scrap(Drop):
+    def __init__(self, x, y, *groups):
         super().__init__(x, y, *groups)
-        self.image = pygame.transform.scale(rendering.load_image(f"{xp_value}xp.png", colorkey=-1), (20, 20))
+        self.image = pygame.transform.scale(rendering.load_image(f"scrap{randint(1, 2)}.png", colorkey=-1), (20, 20))
         self.rect = self.image.get_rect()
         self.rect.center = self.x, self.y
-        self.xp = xp_value
 
     def update(self, secs):
         self.x += self.ax * secs
