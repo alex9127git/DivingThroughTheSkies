@@ -5,9 +5,10 @@ import pygame
 from aircraft import Aircraft
 from boss import Boss
 from const import calculate_enemies, calculate_difficulty, calculate_enemy_spawn_timer, \
-    calculate_simultaneous_enemies, calculate_fighter_chance, AIRCRAFT_HP, WIDTH, HEIGHT, INITIAL_SPLIT_PATH, \
+    calculate_simultaneous_enemies, calculate_fighter_chance, WIDTH, HEIGHT, INITIAL_SPLIT_PATH, \
     DOUBLE_CANNON_UPGRADES, MINIGUN_CANNON_UPGRADES, HEAVY_CANNON_UPGRADES, MINIGUN_CANNON_BRANCH, \
-    DOUBLE_CANNON_BRANCH, HEAVY_CANNON_BRANCH, FONT_FILE, is_boss_stage
+    DOUBLE_CANNON_BRANCH, HEAVY_CANNON_BRANCH, FONT_FILE, is_boss_stage, UPGRADES, MAX_UPGRADE_LEVELS, \
+    calculate_aircraft_hp, UPGRADE_NAMES, calculate_upgrades_price
 from cursor import Cursor
 from drone import Drone
 from enemy import Enemy
@@ -72,13 +73,13 @@ def game(screen):
     # генерация начальных спрайтов
     aircraft = Aircraft(sprites)
     cursor = Cursor(sprites, ui)
-    hp_bar = Bar(20, 20, 100, 20, AIRCRAFT_HP, "green", sprites, ui)
+    hp_bar = Bar(20, 20, 100, 20, calculate_aircraft_hp(), "green", sprites, ui)
     cooldown_bar = Bar(20, 50, 100, 20, aircraft.upgrades.calculate_cooldown(), "black", sprites, ui)
     xp_bar = Bar(20, HEIGHT - 40, WIDTH - 40, 20, aircraft.experience_to_next_level, (240, 148, 80), sprites, ui)
     stage_text = Text("Сложность: 1", "black", WIDTH - 20, 20, "topright", sprites, ui)
     scrap_got_text = Text("0", "black", WIDTH - 20, 60, "topright", sprites, ui)
     # генерация переменных игры
-    stage = 1
+    stage = 19
     difficulty = calculate_difficulty(stage)
     enemies_defeated = 0
     enemies_to_next_stage = calculate_enemies(stage)
@@ -94,6 +95,8 @@ def game(screen):
     running = True
     boss_defeated = False
     paused = False
+    whiteout_frames = 0
+    sky_colors = ((128, 192, 255), (64, 96, 128), (128, 144, 160))
     clock = pygame.time.Clock()
     while running:
         for event in pygame.event.get():
@@ -134,7 +137,10 @@ def game(screen):
                 aircraft.accelerate(0, -5)
             if pygame.mouse.get_pressed(3)[0] and aircraft.upgrades.upgrade_branch == MINIGUN_CANNON_BRANCH:
                 aircraft.shoot(groups)
-        screen.fill((128, 192, 255))
+        sky_color = sky_colors[((stage - 1) // 10) % len(sky_colors)]
+        screen.fill((int(sky_color[0] + (255 - sky_color[0]) / 60 * whiteout_frames),
+                     int(sky_color[1] + (255 - sky_color[1]) / 60 * whiteout_frames),
+                     int(sky_color[2] + (255 - sky_color[2]) / 60 * whiteout_frames)))
         secs = clock.tick(60) / 1000
         if leveling_up == -1 and not paused:
             # проверяем, жив ли самолет. Если нет, игра выключается через 1.5 секунд
@@ -210,9 +216,12 @@ def game(screen):
                 enemies_to_next_stage = calculate_enemies(stage)
                 enemy_spawn_timer = calculate_enemy_spawn_timer(stage)
                 simultaneous_enemies = calculate_simultaneous_enemies(stage)
+                whiteout_frames = 60
             # отрисовка спрайтов
             sprites.draw(screen)
             ui.draw(screen)
+            if whiteout_frames > 0:
+                whiteout_frames -= 1
         elif leveling_up != -1:
             # отрисовка спрайтов
             upgrade_ui.update(secs)
@@ -272,7 +281,13 @@ def stats(screen, scrap, stage, level):
 
 
 def upgrades_screen(screen):
-    button = pygame.Rect(WIDTH // 2 - 100, 700, 200, 50)
+    button = pygame.Rect(WIDTH // 2 - 100, HEIGHT - 100, 200, 50)
+    scrap_image = pygame.transform.scale(load_image(f"scrap1.png", colorkey=-1), (36, 36))
+    upgrades_data = get_upgrades_data()
+    upgrade_buttons = []
+    for i in range(4):
+        upgrade_buttons.append(pygame.Rect(550, 120 + 90 * i, 200, 50))
+    prices = []
     running = True
     while running:
         for event in pygame.event.get():
@@ -281,12 +296,45 @@ def upgrades_screen(screen):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if button.collidepoint(*event.pos):
                     running = False
+                else:
+                    for i, upgrade_button in enumerate(upgrade_buttons):
+                        if upgrade_button.collidepoint(*event.pos):
+                            if upgrades_data["scrap"] >= prices[i]:
+                                upgrades_data["scrap"] -= prices[i]
+                                upgrades_data[UPGRADE_NAMES[i]] += 1
+                                update_upgrades_data(upgrades_data)
         screen.fill((128, 192, 255))
+        upgrades_header = pygame.font.Font(FONT_FILE, 36).render("УЛУЧШЕНИЯ", True, "black")
+        screen.blit(upgrades_header, (50, 50))
+        scrap_qty = pygame.font.Font(FONT_FILE, 36).render(str(upgrades_data["scrap"]), True, "black")
+        screen.blit(scrap_qty, (WIDTH - 50 - scrap_qty.get_width(), 50))
+        screen.blit(scrap_image, (WIDTH - 100 - scrap_qty.get_width(), 50))
+        prices = []
+        y = 120
+        for i in range(4):
+            upgrade_level = upgrades_data[UPGRADE_NAMES[i]]
+            upgrade_text = pygame.font.Font(FONT_FILE, 18).render(UPGRADES[i], True, "black")
+            screen.blit(upgrade_text, (50, y))
+            pygame.draw.rect(screen, (120, 74, 40), (50, y + 40, 450, 15), 0)
+            pygame.draw.rect(screen, (240, 148, 80), (50, y + 40, 450 / MAX_UPGRADE_LEVELS[i] * upgrade_level, 15), 0)
+            price = calculate_upgrades_price(i, upgrade_level + 1)
+            prices.append(price)
+            if price != -1:
+                price_text = pygame.font.Font(FONT_FILE, 18).render(f"Цена: {price}", True, "black")
+                screen.blit(price_text, (500 - price_text.get_width(), y))
+            y += 90
         pygame.draw.rect(screen, "white", button, 0)
         pygame.draw.rect(screen, "black", button, 3)
         back = pygame.font.Font(FONT_FILE, 24).render("НАЗАД", True, "black")
         screen.blit(back, (button.left + button.width // 2 - back.get_width() // 2,
                            button.top + button.height // 2 - back.get_height() // 2))
+        for i, rect in enumerate(upgrade_buttons):
+            pygame.draw.rect(screen, "white" if prices[i] != -1 else "gray", rect, 0)
+            pygame.draw.rect(screen, "black", rect, 3)
+            upgrade = pygame.font.Font(FONT_FILE, 24) \
+                .render("УЛУЧШИТЬ" if prices[i] != -1 else "МАКСИМУМ", True, "black")
+            screen.blit(upgrade, (rect.left + rect.width // 2 - upgrade.get_width() // 2,
+                                  rect.top + rect.height // 2 - upgrade.get_height() // 2))
         pygame.display.flip()
 
 

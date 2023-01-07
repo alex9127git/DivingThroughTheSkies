@@ -10,7 +10,8 @@ class Bullet(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.x, self.y = start_x, start_y
         self.angle = angle
-        self.orig = pygame.transform.rotate(load_image("bullet.png", colorkey="white"), self.angle)
+        filename = "bullet.png" if dmg < 10 else ("bigbullet.png" if dmg < 100 else "hugebullet.png")
+        self.orig = pygame.transform.rotate(load_image(filename, colorkey="white"), self.angle)
         self.image = self.orig
         self.rect = pygame.Rect(self.x - 2, self.y - 2, 5, 5)
         self.rect.center = self.x, self.y

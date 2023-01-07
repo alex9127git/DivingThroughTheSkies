@@ -6,7 +6,7 @@ pygame.font.init()
 WIDTH = 800
 HEIGHT = 600
 MAX_ACCELERATION = 200
-BULLET_SPEED = 1000
+BULLET_SPEED = 500
 AIRCRAFT_HP = 3
 ENEMIES_START = 5
 ENEMIES_INCREMENT = 1
@@ -75,12 +75,23 @@ HEAVY_CANNON_UPGRADES = [
      "Яростные пушки:\n+5 урона для всех пуль",
      "Яростные пушки:\n+5 урона для всех пуль",
      "Несравнимые пушки:\nх1.5 урона для всех пуль"],
-    ["Отложенная кара:\n+6 урона для всех пуль,\nперезарядка х1.2",
-     "Отложенная кара:\n+6 урона для всех пуль,\nперезарядка х1.2",
-     "Мина замедленного\nдействия:\n+10 урона для всех пуль,\nперезарядка х1.2",
-     "Мина замедленного\nдействия:\n+10 урона для всех пуль,\nперезарядка х1.2",
-     "Неминуемая гибель:\nВы наносите в 2 раза\nбольше урона\nвсеми пушками,\nперезарядка х1.5"]
+    ["Отложенная кара:\n+6 урона для всех пуль,\nперезарядка х1.1",
+     "Отложенная кара:\n+6 урона для всех пуль,\nперезарядка х1.1",
+     "Мина замедленного\nдействия:\n+10 урона для всех пуль,\nперезарядка х1.1",
+     "Мина замедленного\nдействия:\n+10 урона для всех пуль,\nперезарядка х1.1",
+     "Неминуемая гибель:\nВы наносите в 2 раза\nбольше урона\nвсеми пушками,\nперезарядка х1.3"]
 ]
+
+
+UPGRADES = ["Шанс на выпадение здоровья:",
+            "Шанс на выпадение металлолома:",
+            "Максимальное здоровье:",
+            "Порог опыта для улучшения:"]
+UPGRADE_NAMES = ["healthrefillupgradelevel",
+                 "scrapchanceupgradelevel",
+                 "maxhpupgradelevel",
+                 "xprequpgradelevel"]
+MAX_UPGRADE_LEVELS = (20, 20, 2, 10)
 
 
 def calculate_enemies(stage):
@@ -111,7 +122,9 @@ def calculate_fighter_chance(stage):
 
 def calculate_aircraft_experience(level):
     """Рассчитывает количество опыта, которое нужно для перехода на следующий уровень."""
-    return EXPERIENCE_TO_LEVEL_UP + EXPERIENCE_INCREMENT * level
+    upgrades_data = get_upgrades_data()
+    return ((EXPERIENCE_TO_LEVEL_UP + EXPERIENCE_INCREMENT * level) *
+            (1 - upgrades_data["xprequpgradelevel"] * 0.03))
 
 
 def calculate_scrap_drop_chance(difficulty):
@@ -127,6 +140,26 @@ def calculate_health_refill_drop_chance():
     return HEALTH_BASE_DROP_CHANCE + HEALTH_DROP_CHANCE_INCREMENT * upgrades_data["healthrefillupgradelevel"]
 
 
+def calculate_aircraft_hp():
+    """Рассчитывает максимальное здоровье самолета."""
+    upgrades_data = get_upgrades_data()
+    return AIRCRAFT_HP + upgrades_data["maxhpupgradelevel"]
+
+
 def is_boss_stage(stage):
     """Возвращает True, если на уровне сложности присутствует босс."""
     return stage % 10 == 0
+
+
+def calculate_upgrades_price(upgrade_id, level):
+    """Возвращает стоимость определенного уровня определенного улучшения."""
+    if upgrade_id == 0 and level <= 20:
+        return 10 * level
+    elif upgrade_id == 1 and level <= 20:
+        return 100 * level
+    elif upgrade_id == 2 and level <= 2:
+        return 100 * 5 ** level
+    elif upgrade_id == 3 and level <= 10:
+        return 500 * level
+    else:
+        return -1

@@ -2,7 +2,7 @@
 import pygame
 from bullet import Bullet
 from const import WIDTH, HEIGHT, MAX_ACCELERATION, BULLET_SPEED, AIRCRAFT_HP, calculate_aircraft_experience, \
-    DOUBLE_CANNON_BRANCH, MINIGUN_CANNON_BRANCH, HEAVY_CANNON_BRANCH
+    DOUBLE_CANNON_BRANCH, MINIGUN_CANNON_BRANCH, HEAVY_CANNON_BRANCH, calculate_aircraft_hp
 from experience import Experience
 from explosion import Explosion
 from health_refill import HealthRefill
@@ -81,7 +81,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.ay = 0
         self.angle = 0
         self.cooldown = 1
-        self.max_hp = AIRCRAFT_HP
+        self.max_hp = calculate_aircraft_hp()
         self.hp = self.max_hp
         self.level = 0
         self.experience = 0

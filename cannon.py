@@ -47,17 +47,17 @@ class Cannon(Enemy):
     def shoot(self, groups):
         if self.cannon_type == "cannon":
             Bullet(self.x, self.y, self.angle, self.dmg,
-                   BULLET_SPEED / 4, groups["enemy_bullets"], groups["sprites"])
+                   BULLET_SPEED / 2, groups["enemy_bullets"], groups["sprites"])
         elif self.cannon_type == "radial cannon":
             Bullet(self.x, self.y, self.angle, self.dmg,
-                   BULLET_SPEED / 4, groups["enemy_bullets"], groups["sprites"])
+                   BULLET_SPEED / 2, groups["enemy_bullets"], groups["sprites"])
             Bullet(self.x, self.y, self.angle + 60, self.dmg,
-                   BULLET_SPEED / 4, groups["enemy_bullets"], groups["sprites"])
+                   BULLET_SPEED / 2, groups["enemy_bullets"], groups["sprites"])
             Bullet(self.x, self.y, self.angle + 120, self.dmg,
-                   BULLET_SPEED / 4, groups["enemy_bullets"], groups["sprites"])
+                   BULLET_SPEED / 2, groups["enemy_bullets"], groups["sprites"])
             Bullet(self.x, self.y, self.angle + 180, self.dmg,
-                   BULLET_SPEED / 4, groups["enemy_bullets"], groups["sprites"])
+                   BULLET_SPEED / 2, groups["enemy_bullets"], groups["sprites"])
             Bullet(self.x, self.y, self.angle + 240, self.dmg,
-                   BULLET_SPEED / 4, groups["enemy_bullets"], groups["sprites"])
+                   BULLET_SPEED / 2, groups["enemy_bullets"], groups["sprites"])
             Bullet(self.x, self.y, self.angle + 300, self.dmg,
-                   BULLET_SPEED / 4, groups["enemy_bullets"], groups["sprites"])
+                   BULLET_SPEED / 2, groups["enemy_bullets"], groups["sprites"])

@@ -73,7 +73,7 @@ class Boss(Enemy):
                 if self.hp <= 0:
                     for _ in range(20):
                         Explosion(self.x + randint(-150, 150), self.y + randint(-150, 150),
-                                  groups["sprites"], groups["explosions"])
+                                  groups["sprites"], groups["explosions"], is_long=True)
                     self.generate_experience(groups)
                     for _ in range(self.guaranteed_scraps):
                         Scrap(self.x, self.y, groups["sprites"], groups["drops"])
