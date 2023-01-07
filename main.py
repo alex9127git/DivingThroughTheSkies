@@ -79,7 +79,7 @@ def game(screen):
     stage_text = Text("Сложность: 1", "black", WIDTH - 20, 20, "topright", sprites, ui)
     scrap_got_text = Text("0", "black", WIDTH - 20, 60, "topright", sprites, ui)
     # генерация переменных игры
-    stage = 19
+    stage = 1
     difficulty = calculate_difficulty(stage)
     enemies_defeated = 0
     enemies_to_next_stage = calculate_enemies(stage)
