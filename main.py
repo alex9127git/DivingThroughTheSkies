@@ -215,6 +215,7 @@ def game(screen):
                 enemies_defeated = 0
                 enemies_to_next_stage = calculate_enemies(stage)
                 enemy_spawn_timer = calculate_enemy_spawn_timer(stage)
+                timer = 10
                 simultaneous_enemies = calculate_simultaneous_enemies(stage)
                 whiteout_frames = 60
             # отрисовка спрайтов
