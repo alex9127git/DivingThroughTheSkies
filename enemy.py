@@ -5,7 +5,7 @@ import rendering
 from experience import Experience
 from explosion import Explosion
 from health_refill import HealthRefill
-from const import calculate_scrap_drop_chance, calculate_health_refill_drop_chance
+from const import calculate_scrap_drop_chance, calculate_health_refill_drop_chance, explode_sfx
 from random import random
 from scrap import Scrap
 
@@ -40,6 +40,7 @@ class Enemy(pygame.sprite.Sprite):
             self.hp -= b.dmg
             b.kill()
             if self.hp <= 0:
+                explode_sfx.play()
                 Explosion(self.x, self.y, groups["sprites"], groups["explosions"])
                 self.generate_experience(groups)
                 for _ in range(self.guaranteed_scraps):
@@ -57,6 +58,7 @@ class Enemy(pygame.sprite.Sprite):
         if pygame.sprite.spritecollideany(aircraft, groups["enemies"],
                                           collided=pygame.sprite.collide_rect_ratio(.5)) == self:
             if aircraft.hp > 0:
+                explode_sfx.play()
                 aircraft.hp -= self.dmg
                 Explosion(aircraft.x, aircraft.y, groups["sprites"], groups["explosions"])
             self.kill()

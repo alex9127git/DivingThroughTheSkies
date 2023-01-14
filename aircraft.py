@@ -1,8 +1,9 @@
 """Класс спрайта самолета."""
 import pygame
 from bullet import Bullet
-from const import WIDTH, HEIGHT, MAX_ACCELERATION, BULLET_SPEED, AIRCRAFT_HP, calculate_aircraft_experience, \
-    DOUBLE_CANNON_BRANCH, MINIGUN_CANNON_BRANCH, HEAVY_CANNON_BRANCH, calculate_aircraft_hp
+from const import WIDTH, HEIGHT, MAX_ACCELERATION, BULLET_SPEED, calculate_aircraft_experience, \
+    DOUBLE_CANNON_BRANCH, MINIGUN_CANNON_BRANCH, HEAVY_CANNON_BRANCH, calculate_aircraft_hp, shoot_sfx, coin_sfx, \
+    heart_sfx, explode_sfx
 from experience import Experience
 from explosion import Explosion
 from health_refill import HealthRefill
@@ -77,6 +78,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.rect.center = WIDTH // 2, HEIGHT // 2
         self.x = WIDTH // 2
         self.y = HEIGHT // 2
+        self.wind_x, self.wind_y = 0, 0
         self.ax = 0
         self.ay = 0
         self.angle = 0
@@ -88,6 +90,11 @@ class Aircraft(pygame.sprite.Sprite):
         self.experience_to_next_level = calculate_aircraft_experience(self.level)
         self.upgrades = Aircraft.UpgradesRecord()
         self.scrap_got = 0
+
+    def apply_wind(self, windmanager):
+        self.wind_x, self.wind_y = windmanager.direction
+        self.wind_x *= 80
+        self.wind_y *= 80
 
     def accelerate(self, dx, dy):
         self.ax += dx
@@ -105,8 +112,8 @@ class Aircraft(pygame.sprite.Sprite):
         self.cooldown -= secs
         if self.cooldown < 0:
             self.cooldown = 0
-        self.x += self.ax * secs
-        self.y += self.ay * secs
+        self.x += (self.ax + self.wind_x) * secs
+        self.y += (self.ay + self.wind_y) * secs
         self.ax *= 0.99
         self.ay *= 0.99
         if abs(self.ax) <= 1:
@@ -138,6 +145,7 @@ class Aircraft(pygame.sprite.Sprite):
 
     def shoot(self, groups):
         if self.cooldown == 0:
+            shoot_sfx.play()
             if self.upgrades.upgrade_branch == DOUBLE_CANNON_BRANCH:
                 Bullet(self.x + cos(self.angle + 90) * 15, self.y + sin(self.angle + 90) * 15,
                        self.angle, self.upgrades.calculate_base_dmg() * (1.5 if self.upgrades[0] >= 3 else 1),
@@ -182,6 +190,7 @@ class Aircraft(pygame.sprite.Sprite):
         bullet = pygame.sprite.spritecollideany(self, groups["enemy_bullets"],
                                                 collided=pygame.sprite.collide_rect_ratio(.5))
         if bullet is not None and isinstance(bullet, Bullet):
+            explode_sfx.play()
             self.hp -= bullet.dmg
             Explosion(self.x, self.y, groups["sprites"], groups["explosions"])
             bullet.kill()
@@ -192,10 +201,13 @@ class Aircraft(pygame.sprite.Sprite):
         if drop is not None:
             if isinstance(drop, Experience):
                 self.experience += drop.xp
+                coin_sfx.play()
             elif isinstance(drop, Scrap):
                 self.scrap_got += 1
+                coin_sfx.play()
             elif isinstance(drop, HealthRefill):
                 self.hp += 1 if self.hp < self.max_hp else 0
+                heart_sfx.play()
             drop.kill()
         if self.experience >= self.experience_to_next_level and self.level <= 9:
             self.experience -= self.experience_to_next_level

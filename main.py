@@ -8,16 +8,18 @@ from const import calculate_enemies, calculate_difficulty, calculate_enemy_spawn
     calculate_simultaneous_enemies, calculate_fighter_chance, WIDTH, HEIGHT, INITIAL_SPLIT_PATH, \
     DOUBLE_CANNON_UPGRADES, MINIGUN_CANNON_UPGRADES, HEAVY_CANNON_UPGRADES, MINIGUN_CANNON_BRANCH, \
     DOUBLE_CANNON_BRANCH, HEAVY_CANNON_BRANCH, FONT_FILE, is_boss_stage, UPGRADES, MAX_UPGRADE_LEVELS, \
-    calculate_aircraft_hp, UPGRADE_NAMES, calculate_upgrades_price
+    calculate_aircraft_hp, UPGRADE_NAMES, calculate_upgrades_price, menu_select_sfx
 from cursor import Cursor
 from drone import Drone
 from enemy import Enemy
 from fighter import Fighter
+from fogmanager import FogManager
 from rendering import initialize, load_image
 from bar import Bar
 from text import Text
 from upgrade import UpgradeButton
 from file_func import get_upgrades_data, update_upgrades_data
+from windmanager import WindManager
 
 
 def terminate():
@@ -35,8 +37,10 @@ def main_menu(screen):
                 terminate()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if play_button.collidepoint(*event.pos):
+                    menu_select_sfx.play()
                     return "play"
                 elif upgrades_button.collidepoint(*event.pos):
+                    menu_select_sfx.play()
                     return "upgrades"
         screen.fill((128, 192, 255))
         text = pygame.font.Font(FONT_FILE, 36).render("Diving Through the Skies", True, "black")
@@ -65,11 +69,12 @@ def game(screen):
     enemies = pygame.sprite.Group()
     ui = pygame.sprite.Group()
     upgrade_ui = pygame.sprite.Group()
+    weather = pygame.sprite.Group()
     scrap_image = pygame.transform.scale(load_image(f"scrap1.png", colorkey=-1), (25, 25))
     Text("Выберите улучшение из трёх", "black", 20, 20, "topleft", upgrade_ui)
     groups = {"sprites": sprites, "explosions": explosions, "drops": drops,
               "player_bullets": player_bullets, "enemy_bullets": enemy_bullets, "enemies": enemies, "ui": ui,
-              "upgrade_ui": upgrade_ui}
+              "upgrade_ui": upgrade_ui, "weather": weather}
     # генерация начальных спрайтов
     aircraft = Aircraft(sprites)
     cursor = Cursor(sprites, ui)
@@ -78,6 +83,8 @@ def game(screen):
     xp_bar = Bar(20, HEIGHT - 40, WIDTH - 40, 20, aircraft.experience_to_next_level, (240, 148, 80), sprites, ui)
     stage_text = Text("Сложность: 1", "black", WIDTH - 20, 20, "topright", sprites, ui)
     scrap_got_text = Text("0", "black", WIDTH - 20, 60, "topright", sprites, ui)
+    windmanager = WindManager(sprites, weather)
+    fogmanager = FogManager(sprites, weather)
     # генерация переменных игры
     stage = 1
     difficulty = calculate_difficulty(stage)
@@ -125,6 +132,7 @@ def game(screen):
                                 leveling_up = -1
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    menu_select_sfx.play()
                     paused = not paused
             keys = pygame.key.get_pressed()
             if keys[pygame.K_d]:
@@ -173,6 +181,7 @@ def game(screen):
                         boss_defeated = enemy.hp <= 0
                         enemy.update_strategy(aircraft, groups)
             # проверки, связанные с самолетом
+            aircraft.apply_wind(windmanager)
             aircraft.rotate_to_cursor(cursor)
             aircraft.check_bullet_collisions(groups)
             leveling_up = aircraft.check_drops(groups)
@@ -211,6 +220,13 @@ def game(screen):
                 simultaneous_enemies = calculate_simultaneous_enemies(stage)
             if boss_defeated and is_boss_stage(stage):
                 stage += 1
+                if stage % 30 == 1:
+                    fogmanager.disable()
+                if stage % 30 == 11:
+                    windmanager.enable()
+                elif stage % 30 == 21:
+                    windmanager.disable()
+                    fogmanager.enable()
                 difficulty = calculate_difficulty(stage)
                 enemies_defeated = 0
                 enemies_to_next_stage = calculate_enemies(stage)
@@ -220,6 +236,7 @@ def game(screen):
                 whiteout_frames = 60
             # отрисовка спрайтов
             sprites.draw(screen)
+            weather.draw(screen)
             ui.draw(screen)
             if whiteout_frames > 0:
                 whiteout_frames -= 1
@@ -277,6 +294,7 @@ def stats(screen, scrap, stage, level):
                 terminate()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if button.collidepoint(*event.pos):
+                    menu_select_sfx.play()
                     running = False
         pygame.display.flip()
 
@@ -296,11 +314,14 @@ def upgrades_screen(screen):
                 terminate()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if button.collidepoint(*event.pos):
+                    menu_select_sfx.play()
                     running = False
                 else:
                     for i, upgrade_button in enumerate(upgrade_buttons):
                         if upgrade_button.collidepoint(*event.pos):
-                            if upgrades_data["scrap"] >= prices[i]:
+                            menu_select_sfx.play()
+                            if upgrades_data["scrap"] >= prices[i] and \
+                                    upgrades_data[UPGRADE_NAMES[i]] < MAX_UPGRADE_LEVELS[i]:
                                 upgrades_data["scrap"] -= prices[i]
                                 upgrades_data[UPGRADE_NAMES[i]] += 1
                                 update_upgrades_data(upgrades_data)

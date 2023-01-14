@@ -4,7 +4,7 @@ from random import randint, random
 
 from bullet import Bullet
 from cannon import Cannon
-from const import WIDTH, calculate_scrap_drop_chance
+from const import WIDTH, calculate_scrap_drop_chance, shoot_sfx, explode_sfx
 from enemy import Enemy
 
 from explosion import Explosion
@@ -71,6 +71,7 @@ class Boss(Enemy):
                 self.hp -= bullet.dmg
                 bullet.kill()
                 if self.hp <= 0:
+                    explode_sfx.play()
                     for _ in range(20):
                         Explosion(self.x + randint(-150, 150), self.y + randint(-150, 150),
                                   groups["sprites"], groups["explosions"], is_long=True)
@@ -93,6 +94,7 @@ class Boss(Enemy):
                 elif cannon.cannon_type == "radial cannon":
                     cannon.angle -= 1
         if self.timer <= 0:
+            shoot_sfx.play()
             self.timer = 0.2 if self.shortened_shots else self.shoot_cooldown
             self.shortened_shots -= 1 if self.shortened_shots else 0
             for cannon in self.cannons:

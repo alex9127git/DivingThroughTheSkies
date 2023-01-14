@@ -3,6 +3,7 @@ import pygame
 from file_func import get_upgrades_data
 
 pygame.font.init()
+pygame.mixer.init()
 WIDTH = 800
 HEIGHT = 600
 MAX_ACCELERATION = 200
@@ -25,6 +26,13 @@ SCRAP_DROP_CHANCE_INCREMENT = 0.2
 HEALTH_BASE_DROP_CHANCE = 1.0
 HEALTH_DROP_CHANCE_INCREMENT = 0.2
 FONT_FILE = "data/AubreyPro.otf"
+
+# Звуки
+shoot_sfx = pygame.mixer.Sound("data/shoot.wav")
+coin_sfx = pygame.mixer.Sound("data/coin.wav")
+heart_sfx = pygame.mixer.Sound("data/heart.wav")
+menu_select_sfx = pygame.mixer.Sound("data/select.wav")
+explode_sfx = pygame.mixer.Sound("data/explosion.wav")
 
 # улучшения
 INITIAL_SPLIT_PATH = ["Двойная пушка:\nСтреляет двумя пулями\nрасположенными близко\nдруг к другу",
