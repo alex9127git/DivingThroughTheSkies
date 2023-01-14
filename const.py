@@ -33,6 +33,8 @@ coin_sfx = pygame.mixer.Sound("data/coin.wav")
 heart_sfx = pygame.mixer.Sound("data/heart.wav")
 menu_select_sfx = pygame.mixer.Sound("data/select.wav")
 explode_sfx = pygame.mixer.Sound("data/explosion.wav")
+boss_defeated_sfx = pygame.mixer.Sound("data/boss_defeated.wav")
+game_over_sfx = pygame.mixer.Sound("data/gameover.wav")
 
 # улучшения
 INITIAL_SPLIT_PATH = ["Двойная пушка:\nСтреляет двумя пулями\nрасположенными близко\nдруг к другу",

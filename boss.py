@@ -4,7 +4,7 @@ from random import randint, random
 
 from bullet import Bullet
 from cannon import Cannon
-from const import WIDTH, calculate_scrap_drop_chance, shoot_sfx, explode_sfx
+from const import WIDTH, calculate_scrap_drop_chance, shoot_sfx, explode_sfx, boss_defeated_sfx
 from enemy import Enemy
 
 from explosion import Explosion
@@ -71,6 +71,7 @@ class Boss(Enemy):
                 self.hp -= bullet.dmg
                 bullet.kill()
                 if self.hp <= 0:
+                    boss_defeated_sfx.play()
                     explode_sfx.play()
                     for _ in range(20):
                         Explosion(self.x + randint(-150, 150), self.y + randint(-150, 150),

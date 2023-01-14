@@ -8,7 +8,7 @@ from const import calculate_enemies, calculate_difficulty, calculate_enemy_spawn
     calculate_simultaneous_enemies, calculate_fighter_chance, WIDTH, HEIGHT, INITIAL_SPLIT_PATH, \
     DOUBLE_CANNON_UPGRADES, MINIGUN_CANNON_UPGRADES, HEAVY_CANNON_UPGRADES, MINIGUN_CANNON_BRANCH, \
     DOUBLE_CANNON_BRANCH, HEAVY_CANNON_BRANCH, FONT_FILE, is_boss_stage, UPGRADES, MAX_UPGRADE_LEVELS, \
-    calculate_aircraft_hp, UPGRADE_NAMES, calculate_upgrades_price, menu_select_sfx
+    calculate_aircraft_hp, UPGRADE_NAMES, calculate_upgrades_price, menu_select_sfx, game_over_sfx
 from cursor import Cursor
 from drone import Drone
 from enemy import Enemy
@@ -254,6 +254,7 @@ def game(screen):
 
 def stats(screen, scrap, stage, level):
     screen.fill((128, 192, 255))
+    game_over_sfx.play()
     scrap_image = pygame.transform.scale(load_image(f"scrap1.png", colorkey=-1), (25, 25))
     bigger_scrap_image = pygame.transform.scale(load_image(f"scrap1.png", colorkey=-1), (50, 50))
     game_over_text = pygame.font.Font(FONT_FILE, 36).render("ИГРА ОКОНЧЕНА", True, "black")
